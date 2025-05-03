@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Illuminating Vesak - Interactive Festival Experience</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-app.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-database.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/inter.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --buddhist-yellow: #FFD700;
+            --lotus-pink: #FFC0CB;
+            --calm-blue: #1E3A8A;
+            --enlightenment-white: #FFFFFF;
+            --dharma-orange: #FF8C00;
+            --mindful-green: #008000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        body {
+            background-color: var(--calm-blue);
+            color: var(--enlightenment-white);
+            overflow-x: hidden;
+        }
+
+        .loader {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: var(--calm-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loader-content {
+            text-align: center;
+        }
+
+        .lotus-loader {
+            width: 100px;
+            height: 100px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        header {
+            background: linear-gradient(rgba(30, 58, 138, 0.8), rgba(30, 58, 138, 0.8)), url('https://via.placeholder.com/1920x500');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lanterns {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--buddhist-yellow);
+            display: flex;
+            align-items: center;
+            letter-spacing: -0.03em;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+            font-size: 1.8rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--enlightenment-white);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--buddhist-yellow);
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 100px);
+            text-align: center;
+            z-index: 10;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--buddhist-yellow);
+            animation: fadeIn 1s ease-in;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            max-width: 700px;
+            margin-bottom: 2rem;
+            animation: slideUp 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .cta-button {
+            background-color: var(--buddhist-yellow);
+            color: var(--calm-blue);
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-weight: bold;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .section {
+            padding: 5rem 2rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--buddhist-yellow);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 15px;
+        }
+        
+        .section-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: var(--buddhist-yellow);
+            border-radius: 2px;
+        }
+
+        .floating-lotuses {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .lotus {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23FFC0CB" d="M50 0 C60 30 90 40 50 100 C10 40 40 30 50 0Z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            animation: float 15s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        /* About Section */
+        .about {
+            background: linear-gradient(var(--calm-blue), var(--mindful-green));
+            text-align: center;
+        }
+
+        .vesak-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .info-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 300px;
+            transition: transform 0.3s;
+        }
+
+        .info-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .info-card h3 {
+            color: var(--buddhist-yellow);
+            margin-bottom: 1rem;
+        }
+
+        /* Games Section */
+        .games {
+            background: var(--mindful-green);
+        }
+
+        .games-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .game-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            position: relative;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .game-thumb {
+            height: 200px;
+            background-color: var(--calm-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-info {
+            padding: 1.5rem;
+        }
+
+        .game-info h3 {
+            color: var(--buddhist-yellow);
+            margin-bottom: 0.5rem;
+        }
+
+        .play-button {
+            background-color: var(--buddhist-yellow);
+            color: var(--calm-blue);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            margin-top: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .play-button:hover {
+            background-color: var(--dharma-orange);
+        }
+
+        .maintenance {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--enlightenment-white);
+            text-align: center;
+            padding: 1rem;
+        }
+
+        /* Leaderboard Section */
+        .leaderboard {
+            background: linear-gradient(var(--mindful-green), var(--calm-blue));
+        }
+
+        .leaderboard-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            color: var(--enlightenment-white);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid var(--buddhist-yellow);
+            color: var(--buddhist-yellow);
+        }
+
+        .leaderboard-list {
+            list-style: none;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        .leaderboard-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .rank {
+            font-weight: bold;
+            color: var(--buddhist-yellow);
+            width: 50px;
+        }
+
+        .player-name {
+            flex-grow: 1;
+            padding: 0 1rem;
+        }
+
+        .score {
+            font-weight: bold;
+            width: 100px;
+            text-align: right;
+        }
+
+        /* Footer */
+        footer {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .creator {
+            margin-top: 1rem;
+            font-style: italic;
+            color: var(--buddhist-yellow);
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--enlightenment-white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s;
+        }
+
+        .social-link:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Modal for games */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-content {
+            background-color: var(--calm-blue);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Player Name Modal */
+        .name-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .name-modal-content {
+            background-color: var(--calm-blue);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            border: 2px solid var(--buddhist-yellow);
+        }
+        
+        .name-input {
+            width: 100%;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border: 2px solid var(--buddhist-yellow);
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--enlightenment-white);
+            font-size: 1.2rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .name-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px var(--buddhist-yellow);
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .name-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .start-game-btn {
+            background-color: var(--buddhist-yellow);
+            color: var(--calm-blue);
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .start-game-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            background-color: var(--dharma-orange);
+        }
+
+        .close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: var(--enlightenment-white);
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .game-frame {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .game-frame {
+                height: 400px;
+            }
+        }
+
+        /* 3D Animation Canvas */
+        #animation-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        /* Game Styles */
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .game-ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loader">
+        <div class="loader-content">
+            <div class="lotus-loader">
+                <svg viewBox="0 0 100 100">
+                    <path fill="#FFC0CB" d="M50 0 C60 30 90 40 50 100 C10 40 40 30 50 0Z" />
+                </svg>
+            </div>
+            <h2>Loading Vesak Experience...</h2>
+        </div>
+    </div>
+
+    <!-- 3D Background Animation -->
+    <canvas id="animation-canvas"></canvas>
+
+    <!-- Floating Lotuses Animation -->
+    <div class="floating-lotuses" id="lotuses"></div>
+
+    <!-- Header Section -->
+    <header>
+        <div class="lanterns" id="lanterns"></div>
+        <div class="nav-container">
+            <div class="logo"><i class="fas fa-dharmachakra"></i> Vesak Festival</div>
+            <div class="nav-links">
+                <a href="#about">About Vesak</a>
+                <a href="#games">Games</a>
+                <a href="#leaderboard">Leaderboard</a>
+                <a href="#message">Message</a>
+            </div>
+        </div>
+        <div class="hero">
+            <h1>Celebrate Vesak Festival</h1>
+            <p>Experience the beauty and meaning of Vesak through interactive games and animations while learning about Buddhist teachings.</p>
+            <button class="cta-button" id="explore-btn">Begin Your Journey</button>
+        </div>
+    </header>
+
+    <!-- About Section -->
+    <section class="section about" id="about">
+        <h2 class="section-title">About Vesak</h2>
+        <p>Vesak is one of the most important Buddhist festivals, celebrating the birth, enlightenment, and passing of Gautama Buddha. It is a time for reflection, joy, and spiritual growth.</p>
+        
+        <div class="vesak-info">
+            <div class="info-card">
+                <h3>Birth</h3>
+                <p>Commemorates the birth of Siddhartha Gautama in Lumbini, Nepal, who later became Buddha.</p>
+            </div>
+            <div class="info-card">
+                <h3>Enlightenment</h3>
+                <p>Celebrates Buddha's attainment of enlightenment under the Bodhi tree in Bodh Gaya.</p>
+            </div>
+            <div class="info-card">
+                <h3>Parinirvana</h3>
+                <p>Honors Buddha's death and entry into final nirvana, freeing him from the cycle of rebirth.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Games Section -->
+    <section class="section games" id="games">
+        <h2 class="section-title">Interactive Games</h2>
+        <p>Experience the teachings of Buddha through these interactive games. Test your knowledge, reflexes, and mindfulness.</p>
+        
+        <div class="games-container">
+            <!-- Game 1 -->
+            <div class="game-card">
+                <div class="game-thumb">
+                    <img src="/api/placeholder/300/200" alt="Lotus Path Game">
+                </div>
+                <div class="game-info">
+                    <h3>Lotus Path</h3>
+                    <p>Guide the lotus flower through obstacles while collecting enlightenment points.</p>
+                    <button class="play-button" data-game="lotus-path">Play Now</button>
+                </div>
+            </div>
+            
+            <!-- Game 2 -->
+            <div class="game-card">
+                <div class="game-thumb">
+                    <img src="/api/placeholder/300/200" alt="Dharma Quiz">
+                </div>
+                <div class="game-info">
+                    <h3>Dharma Quiz</h3>
+                    <p>Test your knowledge of Buddha's teachings in this interactive quiz game.</p>
+                    <button class="play-button" data-game="dharma-quiz">Play Now</button>
+                </div>
+            </div>
+            
+            <!-- Game 3 (Coming Soon) -->
+            <div class="game-card">
+                <div class="game-thumb">
+                    <img src="/api/placeholder/300/200" alt="Meditation Master">
+                </div>
+                <div class="game-info">
+                    <h3>Meditation Master</h3>
+                    <p>Practice mindfulness and meditation techniques in a serene environment.</p>
+                    <button class="play-button" disabled>Coming Soon</button>
+                </div>
+                <div class="maintenance">
+                    <div>
+                        <h3>Coming Soon</h3>
+                        <p>Our development monks are currently working on this experience.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game 4 (Coming Soon) -->
+            <div class="game-card">
+                <div class="game-thumb">
+                    <img src="/api/placeholder/300/200" alt="Temple Builder">
+                </div>
+                <div class="game-info">
+                    <h3>Temple Builder</h3>
+                    <p>Design and build your own Buddhist temple while learning about sacred architecture.</p>
+                    <button class="play-button" disabled>Coming Soon</button>
+                </div>
+                <div class="maintenance">
+                    <div>
+                        <h3>Under Construction</h3>
+                        <p>This game is currently being built with love and care.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game 5 (Coming Soon) -->
+            <div class="game-card">
+                <div class="game-thumb">
+                    <img src="/api/placeholder/300/200" alt="Eight-Fold Path">
+                </div>
+                <div class="game-info">
+                    <h3>Eight-Fold Path</h3>
+                    <p>Journey through the eight-fold path in this adventure game.</p>
+                    <button class="play-button" disabled>Coming Soon</button>
+                </div>
+                <div class="maintenance">
+                    <div>
+                        <h3>In Development</h3>
+                        <p>Our team is diligently crafting this experience for you.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leaderboard Section -->
+    <section class="section leaderboard" id="leaderboard">
+        <h2 class="section-title">Global Leaderboard</h2>
+        <p>See who's achieved the highest enlightenment scores across our games.</p>
+        
+        <div class="leaderboard-container">
+            <div class="tabs">
+                <button class="tab active" data-game="lotus-path">Lotus Path</button>
+                <button class="tab" data-game="dharma-quiz">Dharma Quiz</button>
+                <button class="tab" data-game="all">All Games</button>
+            </div>
+            
+            <ul class="leaderboard-list" id="leaderboard-list">
+                <!-- Leaderboard items will be populated dynamically -->
+                <li class="leaderboard-item">
+                    <span class="rank">1</span>
+                    <span class="player-name">Loading...</span>
+                    <span class="score">0</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Message Section -->
+    <section class="section message" id="message">
+        <h2 class="section-title">Vesak Message</h2>
+        
+        <div class="message-container">
+            <div class="message-card">
+                <p>To all Sri Lankans celebrating Vesak, may this sacred occasion bring peace, joy, and spiritual growth. As we commemorate the birth, enlightenment, and passing of Lord Buddha, let us reflect on his profound teachings of compassion, mindfulness, and wisdom.</p>
+                <p>In a world often filled with chaos and suffering, Vesak reminds us to cultivate inner peace and extend loving-kindness to all beings. Let the light of your lanterns symbolize the illumination of wisdom dispelling the darkness of ignorance.</p>
+                <p>As you honor this special day with offerings, meditation, and acts of generosity, may you find renewed inspiration to walk the noble eightfold path. May the blessings of the Triple Gem guide you toward greater understanding and happiness.</p>
+                <p>Vesak reminds us that each of us has the capacity for awakening. Through mindful living and compassionate action, we can contribute to a more harmonious world.</p>
+                <p class="signature">With metta,<br>Chamod Wijekoon</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>Join us in celebrating Vesak, the most sacred Buddhist festival honoring the birth, enlightenment, and passing away of Gautama Buddha.</p>
+            <p class="creator">Created with devotion by Chamod Wijekoon</p>
+            <div class="social-links">
+                <a href="#" class="social-link">FB</a>
+                <a href="#" class="social-link">IG</a>
+                <a href="#" class="social-link">TW</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Name Input Modal -->
+    <div class="name-modal" id="name-modal">
+        <div class="name-modal-content">
+            <h2 style="color: var(--buddhist-yellow);">Enter Your Name</h2>
+            <p>Before embarking on your spiritual journey, please share your name with us.</p>
+            <input type="text" id="player-name" class="name-input" placeholder="Your Name" maxlength="15">
+            <button id="submit-name" class="start-game-btn">Begin Journey <i class="fas fa-lotus"></i></button>
+        </div>
+    </div>
+    
+    <!-- Game Modals -->
+    <div class="modal" id="game-modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="game-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            // Your Firebase configuration
+            apiKey: "YOUR_API_KEY",
+            authDomain: "vesak-festival.firebaseapp.com",
+            databaseURL: "https://vesak-festival.firebaseio.com",
+            projectId: "vesak-festival",
+            storageBucket: "vesak-festival.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Initialize Firebase (commented out since this is a demo)
+        // firebase.initializeApp(firebaseConfig);
+        // const database = firebase.database();
+
+        // DOM Elements
+        const loader = document.querySelector('.loader');
+        const lotusesContainer = document.getElementById('lotuses');
+        const lanternsContainer = document.getElementById('lanterns');
+        const exploreBtn = document.getElementById('explore-btn');
+        const modal = document.getElementById('game-modal');
+        const nameModal = document.getElementById('name-modal');
+        const gameContainer = document.getElementById('game-container');
+        const closeBtn = document.querySelector('.close');
+        const tabs = document.querySelectorAll('.tab');
+        const leaderboardList = document.getElementById('leaderboard-list');
+        const playButtons = document.querySelectorAll('.play-button');
+        const playerNameInput = document.getElementById('player-name');
+        const submitNameBtn = document.getElementById('submit-name');
+        
+        // Player data
+        let currentPlayer = {
+            name: '',
+            gameType: ''
+        };
+
+        // 3D Animation with Three.js
+        const canvas = document.getElementById('animation-canvas');
+        const renderer = new THREE.WebGLRenderer({
+            canvas,
+            alpha: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+
+        // Create lotus geometry
+        const lotusGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const lotusMaterial = new THREE.MeshBasicMaterial({
+            color: 0xFFC0CB,
+            transparent: true,
+            opacity: 0.7
+        });
+
+        // Add multiple lotus flowers
+        const lotusFlowers = [];
+        for (let i = 0; i < 20; i++) {
+            const lotus = new THREE.Mesh(lotusGeometry, lotusMaterial);
+            lotus.position.x = Math.random() * 10 - 5;
+            lotus.position.y = Math.random() * 10 - 5;
+            lotus.position.z = Math.random() * 5 - 10;
+            scene.add(lotus);
+            lotusFlowers.push({
+                mesh: lotus,
+                rotationSpeed: Math.random() * 0.02,
+                floatSpeed: Math.random() * 0.01 + 0.005
+            });
+        }
+
+        // Animation function
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            lotusFlowers.forEach(lotus => {
+                lotus.mesh.rotation.x += lotus.rotationSpeed;
+                lotus.mesh.rotation.y += lotus.rotationSpeed;
+                lotus.mesh.position.y += lotus.floatSpeed;
+                
+                if (lotus.mesh.position.y > 5) {
+                    lotus.mesh.position.y = -5;
+                    lotus.mesh.position.x = Math.random() * 10 - 5;
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+
+        // Create floating lotuses
+        function createLotuses() {
+            for (let i = 0; i < 30; i++) {
+                const lotus = document.createElement('div');
+                lotus.classList.add('lotus');
+                lotus.style.left = `${Math.random() * 100}%`;
+                lotus.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                lotus.style.animationDelay = `${Math.random() * 5}s`;
+                lotus.style.opacity = Math.random() * 0.7 + 0.3;
+                lotus.style.transform = `scale(${Math.random() * 1 + 0.5})`;
+                lotusesContainer.appendChild(lotus);
+            }
+        }
+
+        // Create lanterns for header
+        function createLanterns() {
+            for (let i = 0; i < 15; i++) {
+                const lantern = document.createElement('div');
+                lantern.style.position = 'absolute';
+                lantern.style.width = '50px';
+                lantern.style.height = '80px';
+                lantern.style.borderRadius = '25px';
+                lantern.style.background = `rgba(255, ${Math.floor(Math.random() * 100) + 156}, 0, 0.7)`;
+                lantern.style.boxShadow = '0 0 20px rgba(255, 200, 0, 0.5)';
+                lantern.style.left = `${Math.random() * 100}%`;
+                lantern.style.top = `${Math.random() * 50 + 10}%`;
+                lantern.style.animation = `float ${Math.random() * 5 + 10}s ease-in-out infinite alternate`;
+                lanternsContainer.appendChild(lantern);
+            }
+        }
+
+        // Sample leaderboard data (in a real app, this would come from Firebase)
+        const leaderboardData = {
+            'lotus-path': [
+                { name: 'Mindful_Master', score: 9500 },
+                { name: 'Peaceful_Soul', score: 8700 },
+                { name: 'DharmaDreamer', score: 8200 },
+                { name: 'LotusLight', score: 7600 },
+                { name: 'ZenWarrior', score: 6950 }
+            ],
+            'dharma-quiz': [
+                { name: 'BuddhaWisdom', score: 10000 },
+                { name: 'SutraScholar', score: 9200 },
+                { name: 'EnlightenedOne', score: 8950 },
+                { name: 'Mindful_Master', score: 8500 },
+                { name: 'DharmaWheel', score: 7800 }
+            ]
+        };
+
+        // Update leaderboard based on selected game
+        function updateLeaderboard(gameType) {
+            leaderboardList.innerHTML = '';
+            
+            let data;
+            if (gameType === 'all') {
+                // Combine and sort all game data
+                data = [...leaderboardData['lotus-path'], ...leaderboardData['dharma-quiz']]
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 10);
+            } else {
+                data = leaderboardData[gameType];
+            }
+            
+            data.forEach((entry, index) => {
+                const item = document.createElement('li');
+                item.classList.add('leaderboard-item');
+                if (index < 3) {
+                    item.style.backgroundColor = 'rgba(255, 215, 0, ' + (0.3 - index * 0.1) + ')';
+                }
+                
+                item.innerHTML = `
+                    <span class="rank">${index + 1}</span>
+                    <span class="player-name">${entry.name}</span>
+                    <span class="score">${entry.score}</span>
+                `;
+                
+                leaderboardList.appendChild(item);
+            });
+        }
+
+        // Tab click event
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                updateLeaderboard(tab.dataset.game);
+            });
+        });
+
+        // Game implementations
+        const games = {
+            'lotus-path': {
+                init: function(container) {
+                    container.innerHTML = `
+                        <canvas id="lotus-game" class="game-canvas"></canvas>
+                        <div class="game-ui">Score: <span id="game-score">0</span></div>
+                    `;
+                    
+                    const canvas = document.getElementById('lotus-game');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = container.offsetWidth;
+                    canvas.height = container.offsetHeight;
+                    
+                    const scoreElement = document.getElementById('game-score');
+                    let score = 0;
+                    
+                    // Game variables
+                    const lotus = {
+                        x: canvas.width / 2,
+                        y: canvas.height - 100,
+                        size: 30,
+                        speed: 5
+                    };
+                    
+                    const obstacles = [];
+                    const enlightenments = [];
+                    
+                    // Controls
+                    const keys = {
+                        ArrowLeft: false,
+                        ArrowRight: false
+                    };
+                    
+                    document.addEventListener('keydown', (e) => {
+                        if (keys.hasOwnProperty(e.key)) {
+                            keys[e.key] = true;
+                        }
+                    });
+                    
+                    document.addEventListener('keyup', (e) => {
+                        if (keys.hasOwnProperty(e.key)) {
+                            keys[e.key] = false;
+                        }
+                    });
+                    
+                    // Mobile controls
+                    canvas.addEventListener('touchstart', (e) => {
+                        const touch = e.touches[0];
+                        const rect = canvas.getBoundingClientRect();
+                        const touchX = touch.clientX - rect.left;
+                        
+                        if (touchX < canvas.width / 2) {
+                            keys.ArrowLeft = true;
+                            keys.ArrowRight = false;
+                        } else {
+                            keys.ArrowRight = true;
+                            keys.ArrowLeft = false;
+                        }
+                    });
+                    
+                    canvas.addEventListener('touchend', () => {
+                        keys.ArrowLeft = false;
+                        keys.ArrowRight = false;
+                    });
+                    
+                    // Create obstacle
+                    function createObstacle() {
+                        obstacles.push({
+                            x: Math.random() * (canvas.width - 50),
+                            y: -50,
+                            width: Math.random() * 100 + 50,
+                            height: 20,
+                            speed: Math.random() * 2 + 2
+                        });
+                    }
+                    
+                    // Create enlightenment point
+                    function createEnlightenment() {
+                        enlightenments.push({
+                            x: Math.random() * (canvas.width - 30),
+                            y: -30,
+                            size: 15,
+                            speed: Math.random() * 2 + 1
+                        });
+                    }
+                    
+                    // Game loop
+                    // Display player name
+                    ctx.font = '20px Inter, sans-serif';
+                    ctx.fillStyle = '#FFD700';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`Player: ${currentPlayer.name}`, canvas.width / 2, 30);
+                    
+                    function gameLoop() {
+                        // Clear canvas
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Display player name
+                        ctx.font = '18px Inter, sans-serif';
+                        ctx.fillStyle = '#FFD700';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(`${currentPlayer.name}`, canvas.width / 2, 30);
+                        
+                        // Move lotus
+                        if (keys.ArrowLeft && lotus.x > 0) {
+                            lotus.x -= lotus.speed;
+                        }
+                        if (keys.ArrowRight && lotus.x < canvas.width - lotus.size) {
+                            lotus.x += lotus.speed;
+                        }
+                        
+                        // Draw lotus
+                        ctx.fillStyle = '#FFC0CB';
+                        ctx.beginPath();
+                        ctx.arc(lotus.x, lotus.y, lotus.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Draw and move obstacles
+                        ctx.fillStyle = '#1E3A8A';
+                        obstacles.forEach((obstacle, index) => {
+                            obstacle.y += obstacle.speed;
+                            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                            
+                            // Check collision
+                            if (
+                                lotus.x + lotus.size > obstacle.x &&
+                                lotus.x - lotus.size < obstacle.x + obstacle.width &&
+                                lotus.y + lotus.size > obstacle.y &&
+                                lotus.y - lotus.size < obstacle.y + obstacle.height
+                            ) {
+                                // Game over logic would go here
+                                score -= 100;
+                                if (score < 0) score = 0;
+                                obstacles.splice(index, 1);
+                            }
+                            
+                            // Remove if off screen
+                            if (obstacle.y > canvas.height) {
+                                obstacles.splice(index, 1);
+                            }
+                        });
+                        
+                        // Draw and move enlightenment points
+                        ctx.fillStyle = '#FFD700';
+                        enlightenments.forEach((point, index) => {
+                            point.y += point.speed;
+                            ctx.beginPath();
+                            ctx.arc(point.x, point.y, point.size, 0, Math.PI * 2);
+                            ctx.fill();
+                            
+                            // Check collision
+                            const dx = lotus.x - point.x;
+                            const dy = lotus.y - point.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance < lotus.size + point.size) {
+                                score += 50;
+                                enlightenments.splice(index, 1);
+                            }
+                            
+                            // Remove if off screen
+                            if (point.y > canvas.height) {
+                                enlightenments.splice(index, 1);
+                            }
+                        });
+                        
+                        // Randomly add new obstacles and enlightenment points
+                        if (Math.random() < 0.02) {
+                            createObstacle();
+                        }
+                        
+                        if (Math.random() < 0.01) {
+                            createEnlightenment();
+                        }
+                        
+                        // Update score
+                        scoreElement.textContent = score;
+                        
+                        // Loop
+                        requestAnimationFrame(gameLoop);
+                    }
+                    
+                    // Start game
+                    gameLoop();
+                }
+            },
+            'dharma-quiz': {
+                init: function(container) {
+                    // Quiz questions
+                    const questions = [
+                        {
+                            question: "What are the Four Noble Truths?",
+                            options: [
+                                "Love, Peace, Harmony, Wisdom",
+                                "Suffering, Cause of Suffering, End of Suffering, Path to End Suffering",
+                                "Earth, Water, Fire, Air",
+                                "Birth, Aging, Illness, Death"
+                            ],
+                            correct: 1
+                        },
+                        {
+                            question: "What is the Eightfold Path?",
+                            options: [
+                                "Eight steps to financial freedom",
+                                "Eight meditation positions",
+                                "Eight rules for monks",
+                                "Eight aspects of practice leading to the end of suffering"
+                            ],
+                            correct: 3
+                        },
+                        {
+                            question: "What does 'Buddha' mean?",
+                            options: [
+                                "God",
+                                "Awakened One",
+                                "Holy Teacher",
+                                "Spiritual Leader"
+                            ],
+                            correct: 1
+                        },
+                        {
+                            question: "What is the primary language of early Buddhist texts?",
+                            options: [
+                                "Sanskrit",
+                                "Hindi",
+                                "Pali",
+                                "Tibetan"
+                            ],
+                            correct: 2
+                        },
+                        {
+                            question: "What is Karma?",
+                            options: [
+                                "Destiny predetermined at birth",
+                                "Intentional action that leads to future consequences",
+                                "Good luck or bad luck",
+                                "Divine judgment"
+                            ],
+                            correct: 1
+                        }
+                    ];
+                    
+                    let currentQuestion = 0;
+                    let score = 0;
+                    
+                    container.innerHTML = `
+                        <div style="padding: 2rem; text-align: center;">
+                            <h2 id="question">Loading question...</h2>
+                            <div id="options" style="margin-top: 2rem;"></div>
+                            <div id="feedback" style="margin-top: 1rem; min-height: 50px;"></div>
+                            <div id="score" style="margin-top: 1rem;">Score: 0</div>
+                            <button id="next-btn" style="display: none; margin-top: 1rem;" class="play-button">Next Question</button>
+                        </div>
+                    `;
+                    
+                    const questionElement = document.getElementById('question');
+                    const optionsElement = document.getElementById('options');
+                    const feedbackElement = document.getElementById('feedback');
+                    const scoreElement = document.getElementById('score');
+                    const nextButton = document.getElementById('next-btn');
+                    
+                    function displayQuestion(index) {
+                        const q = questions[index];
+                        questionElement.textContent = q.question;
+                        
+                        optionsElement.innerHTML = '';
+                        q.options.forEach((option, i) => {
+                            const button = document.createElement('button');
+                            button.textContent = option;
+                            button.className = 'play-button';
+                            button.style.display = 'block';
+                            button.style.width = '100%';
+                            button.style.marginBottom = '10px';
+                            button.style.textAlign = 'left';
+                            button.style.padding = '10px';
+                            
+                            button.addEventListener('click', () => checkAnswer(i));
+                            optionsElement.appendChild(button);
+                        });
+                        
+                        feedbackElement.textContent = '';
+                        nextButton.style.display = 'none';
+                    }
+                    
+                    function checkAnswer(selected) {
+                        const q = questions[currentQuestion];
+                        const optionButtons = optionsElement.querySelectorAll('button');
+                        
+                        // Disable all buttons
+                        optionButtons.forEach(button => {
+                            button.disabled = true;
+                        });
+                        
+                        if (selected === q.correct) {
+                            feedbackElement.textContent = 'Correct! Well done!';
+                            feedbackElement.style.color = '#008000';
+                            score += 100;
+                        } else {
+                            feedbackElement.textContent = 'Incorrect. The correct answer is: ' + q.options[q.correct];
+                            feedbackElement.style.color = '#FF0000';
+                        }
+                        
+                        scoreElement.textContent = 'Score: ' + score;
+                        
+                        // Highlight correct answer
+                        optionButtons[q.correct].style.backgroundColor = '#008000';
+                        
+                        // If incorrect, highlight the wrong selection
+                        if (selected !== q.correct) {
+                            optionButtons[selected].style.backgroundColor = '#FF0000';
+                        }
+                        
+                        // Show next button if there are more questions
+                        if (currentQuestion < questions.length - 1) {
+                            nextButton.style.display = 'inline-block';
+                        } else {
+                            feedbackElement.textContent += ' Quiz complete! Your final score is ' + score;
+                            
+                            // Here you would typically save the score to Firebase
+                            // database.ref('scores/dharma-quiz').push({
+                            //     name: currentPlayer.name,
+                            //     score: score,
+                            //     timestamp: Date.now()
+                            // });
+                            
+                            // Display player's name with final score
+                            feedbackElement.innerHTML = `
+                                <div style="padding: 15px; background: rgba(255, 215, 0, 0.2); border-radius: 10px; margin-top: 15px;">
+                                    <h3 style="color: #FFD700; margin-bottom: 10px;">Congratulations ${currentPlayer.name}!</h3>
+                                    <p>Your final score: <strong>${score}</strong></p>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    nextButton.addEventListener('click', () => {
+                        currentQuestion++;
+                        displayQuestion(currentQuestion);
+                    });
+                    
+                    // Start the quiz
+                    displayQuestion(0);
+                }
+            }
+        };
+
+        // Play button click event
+        playButtons.forEach(button => {
+            if (!button.disabled) {
+                button.addEventListener('click', () => {
+                    const gameType = button.dataset.game;
+                    if (games[gameType]) {
+                        // Store the game type
+                        currentPlayer.gameType = gameType;
+                        
+                        // Show name input modal
+                        nameModal.style.display = 'flex';
+                        playerNameInput.focus();
+                    }
+                });
+            }
+        });
+        
+        // Name submission
+        submitNameBtn.addEventListener('click', () => {
+            const playerName = playerNameInput.value.trim();
+            
+            if (playerName.length >= 3) {
+                // Store player name
+                currentPlayer.name = playerName;
+                
+                // Hide name modal
+                nameModal.style.display = 'none';
+                
+                // Show game modal
+                modal.style.display = 'flex';
+                
+                // Initialize the game
+                games[currentPlayer.gameType].init(gameContainer);
+            } else {
+                // Shake animation for invalid input
+                playerNameInput.style.animation = 'none';
+                setTimeout(() => {
+                    playerNameInput.style.animation = 'shake 0.5s';
+                }, 10);
+            }
+        });
+        
+        // Allow pressing Enter to submit name
+        playerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitNameBtn.click();
+            }
+        });
+
+        // Close modal
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            gameContainer.innerHTML = '';
+        });
+
+        // When clicking outside the modal content, close it
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                gameContainer.innerHTML = '';
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoConstrainedto({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Resize event for the 3D animation
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        });
+
+        // Initialize everything when the page loads
+        window.addEventListener('load', () => {
+            // Show loader for a bit to allow assets to load
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 2000);
+            
+            // Start animations
+            createLotuses();
+            createLanterns();
+            animate();
+            
+            // Initial leaderboard
+            updateLeaderboard('lotus-path');
+            
+            // Add scroll animation for explore button
+            exploreBtn.addEventListener('click', () => {
+                document.querySelector('#about').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

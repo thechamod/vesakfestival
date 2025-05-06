@@ -65,7 +65,7 @@ const AboutSection: React.FC = () => {
           >
             <div className="aspect-w-16 aspect-h-9 h-full">
               <img 
-                src="https://images.pexels.com/photos/6044380/pexels-photo-6044380.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
+                src="https://www.wanderlustmagazine.com/wp-content/uploads/2023/10/vesak-day-main-burma-scaled.jpg" 
                 alt="Vesak celebration with lanterns" 
                 className="w-full h-full object-cover"
               />
